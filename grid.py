@@ -14,21 +14,30 @@ class Grid:
             fill_value=Chip.EMPTY.value
         )
 
-    def _check_index(self, index: Tuple[int, int]):
+    def _check_index(self, index: Tuple[int, int]) -> None:
         if len(index) != 2:
-            raise ValueError('Use a tuple of length 2 for indexing')
+            raise TypeError('Use a tuple of length 2 for indexing')
         if (index[0] < 0 or index[0] >= self.grid.shape[0]
                 or index[1] < 0 or index[1] >= self.grid.shape[1]):
-            raise ValueError(f'Index ({index[0]}, {index[1]}) is out of bounds')
+            raise IndexError(f'Index ({index[0]}, {index[1]}) is out of bounds')
 
-    def _check_chip(self, chip: Chip):
+    @staticmethod
+    def _check_chip(chip: Chip) -> None:
+        if not isinstance(chip, Chip):
+            raise TypeError('Value for Grid must be of type Chip')
         if chip == Chip.EMPTY:
             raise ValueError('Cannot use empty chip')
 
-    def __repr__(self):
+    def __len__(self) -> int:
+        return len(self.grid)
+
+    def __iter__(self):
+        return iter(self.grid)
+
+    def __repr__(self) -> str:
         return repr(self.grid)
 
-    def __setitem__(self, key: Tuple[int, int], chip: Chip):
+    def __setitem__(self, key: Tuple[int, int], chip: Chip) -> None:
         self._check_index(key)
         self._check_chip(chip)
         row, col = key
@@ -39,21 +48,31 @@ class Grid:
             raise CellIsDanglingError(row=row, col=col)
         self.grid[row, col] = chip.value
 
-    def __getitem__(self, index: Tuple[int, int]):
+    def __getitem__(self, index: Tuple[int, int]) -> Chip:
         self._check_index(index)
         row, col = index
         return Chip(self.grid[row, col])
 
-    def drop_chip(self, col: int, chip: Chip):
+    def __getattr__(self, item):
+        return getattr(self.grid, item)
+
+    def find_empty_row(self, col: int) -> int:
         if col < 0 or col >= self.grid.shape[1]:
             raise ValueError(f'Column {col} is out of range')
-        self._check_chip(chip)
         row = self.grid.shape[0] - 1
         while row >= 0 and self.grid[row, col] != Chip.EMPTY.value:
             row -= 1
+        return row
+
+    def drop_chip(self, col: int, chip: Chip) -> None:
+        self._check_chip(chip)
+        row = self.find_empty_row(col)
         if row < 0:
             raise ColumnFullError(col)
         self.grid[row, col] = chip.value
+
+    def is_full(self) -> bool:
+        return np.all(self.grid != Chip.EMPTY.value)
 
 
 class GridError(RuntimeError):
