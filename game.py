@@ -1,18 +1,10 @@
-import enum
 from typing import Optional
 from collections import OrderedDict
 
 import numpy as np
 
 from grid import Grid
-from chip import Chip
-
-
-class WinState(enum.Enum):
-
-    DRAW = 0
-    GREEN = Chip.GREEN.value
-    RED = Chip.RED.value
+from win_state import WinState
 
 
 def check_win_in_vector(vec: np.array, chips_in_a_row):
@@ -78,7 +70,14 @@ class Game:
             self.grid = Grid(rows_num, cols_num)
         self.chips_in_a_row = chips_in_a_row
 
-    def get_win_state(self):
+    def __hash__(self):
+        return hash(
+            str(hash(self.grid))
+            +
+            str(self.chips_in_a_row)
+        )
+
+    def get_win_state(self) -> WinState:
         checks = OrderedDict([
             ('row', check_win_in_row),
             ('col', check_win_in_column),
@@ -88,17 +87,21 @@ class Game:
         for check_name, check in checks.items():
             win_state = check(self.grid, self.chips_in_a_row)
             if win_state != WinState.DRAW:
-                return win_state, check_name
+                return win_state
 
         if self.grid.is_full():
             return WinState.DRAW
 
-        raise NoWinStateError()
+        raise GameNotFinishedError()
 
 
 class GameError(Exception):
     pass
 
 
-class NoWinStateError(GameError):
+class GameNotFinishedError(GameError):
+    pass
+
+
+class GameFinishedError(GameError):
     pass

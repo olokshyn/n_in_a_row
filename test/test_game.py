@@ -328,7 +328,7 @@ class TestGameGetWinState(TestCase):
         g[4, 6] = Chip.RED
 
         ga = game.Game(grid=g, chips_in_a_row=4)
-        self.assertEqual((WinState.RED, 'row'), ga.get_win_state())
+        self.assertEqual(WinState.RED, ga.get_win_state())
 
     def test_win_in_col(self):
         g = grid.Grid(6, 7)
@@ -340,7 +340,7 @@ class TestGameGetWinState(TestCase):
         g.drop_chip(1, Chip.RED)
 
         ga = game.Game(grid=g, chips_in_a_row=4)
-        self.assertEqual((WinState.RED, 'col'), ga.get_win_state())
+        self.assertEqual(WinState.RED, ga.get_win_state())
 
     def test_win_in_main_diagonal(self):
         g = grid.Grid(6, 7)
@@ -360,7 +360,7 @@ class TestGameGetWinState(TestCase):
         g[5, 3] = Chip.GREEN
 
         ga = game.Game(grid=g, chips_in_a_row=4)
-        self.assertEqual((WinState.GREEN, 'main diag'), ga.get_win_state())
+        self.assertEqual(WinState.GREEN, ga.get_win_state())
 
     def test_win_in_sub_diagonal(self):
         g = grid.Grid(6, 7)
@@ -380,4 +380,4 @@ class TestGameGetWinState(TestCase):
         g[2, 3] = Chip.RED
 
         ga = game.Game(grid=g, chips_in_a_row=4)
-        self.assertEqual((WinState.RED, 'sub diag'), ga.get_win_state())
+        self.assertEqual(WinState.RED, ga.get_win_state())

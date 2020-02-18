@@ -17,8 +17,8 @@ class Grid:
     def _check_index(self, index: Tuple[int, int]) -> None:
         if len(index) != 2:
             raise TypeError('Use a tuple of length 2 for indexing')
-        if (index[0] < 0 or index[0] >= self.grid.shape[0]
-                or index[1] < 0 or index[1] >= self.grid.shape[1]):
+        if (index[0] < 0 or index[0] >= self.rows
+                or index[1] < 0 or index[1] >= self.cols):
             raise IndexError(f'Index ({index[0]}, {index[1]}) is out of bounds')
 
     @staticmethod
@@ -54,12 +54,33 @@ class Grid:
         return Chip(self.grid[row, col])
 
     def __getattr__(self, item):
+        attrs_to_skip = {
+            '__copy__', '__deepcopy__',
+            '__getstate__', '__setstate__'
+        }
+        if item in attrs_to_skip:
+            raise AttributeError()
         return getattr(self.grid, item)
 
+    def __hash__(self):
+        return hash(
+            str(hash(self.grid.shape))
+            +
+            str(hash(self.grid.data.tobytes()))
+        )
+
+    @property
+    def rows(self):
+        return self.grid.shape[0]
+
+    @property
+    def cols(self):
+        return self.grid.shape[1]
+
     def find_empty_row(self, col: int) -> int:
-        if col < 0 or col >= self.grid.shape[1]:
+        if col < 0 or col >= self.cols:
             raise ValueError(f'Column {col} is out of range')
-        row = self.grid.shape[0] - 1
+        row = self.rows - 1
         while row >= 0 and self.grid[row, col] != Chip.EMPTY.value:
             row -= 1
         return row
