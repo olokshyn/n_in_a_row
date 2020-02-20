@@ -2,10 +2,9 @@ from unittest import TestCase
 
 import numpy as np
 
-import grid
-import game
-from game import WinState
-from chip import Chip
+from n_in_a_row import grid, game
+from n_in_a_row.game import WinState
+from n_in_a_row.chip import Chip
 
 
 class TestCheckWinInVector(TestCase):

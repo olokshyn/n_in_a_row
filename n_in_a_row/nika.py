@@ -1,8 +1,8 @@
 from typing import Optional
 
-from chip import Chip
-from game import Game
-from solver.game_state import GameState
+from n_in_a_row.chip import Chip
+from n_in_a_row.game import Game
+from n_in_a_row.game_state import GameState
 
 
 class Nika:
@@ -19,7 +19,7 @@ class Nika:
             self.play_as = next_chip
         self.leaf_nodes = []
 
-    def _build_next_game_states(self, game_state: GameState):
+    def _build_next_game_states(self, game_state: GameState) -> None:
         if game_state.win_state is not None:
             game_state.propagate_win_state()
             self.leaf_nodes.append(game_state)
@@ -35,7 +35,7 @@ class Nika:
             next_game_state = game_state.make_move(move)
             self._build_next_game_states(next_game_state)
 
-    def build_solution_tree(self):
+    def build_solution_tree(self) -> None:
         self._build_next_game_states(self.root)
 
 

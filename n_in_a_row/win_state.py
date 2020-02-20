@@ -1,7 +1,7 @@
 import enum
 from typing import List, Dict
 
-from chip import Chip
+from n_in_a_row.chip import Chip
 
 
 class WinState(enum.Enum):

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-import grid
-from chip import Chip
+from n_in_a_row import grid
+from n_in_a_row.chip import Chip
 
 
 class TestSetterGetter(TestCase):

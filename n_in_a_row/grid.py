@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 
 
-from chip import Chip
+from n_in_a_row.chip import Chip
 
 
 class Grid:
@@ -62,7 +62,7 @@ class Grid:
             raise AttributeError()
         return getattr(self.grid, item)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(
             str(hash(self.grid.shape))
             +
@@ -70,11 +70,11 @@ class Grid:
         )
 
     @property
-    def rows(self):
+    def rows(self) -> int:
         return self.grid.shape[0]
 
     @property
-    def cols(self):
+    def cols(self) -> int:
         return self.grid.shape[1]
 
     def find_empty_row(self, col: int) -> int:

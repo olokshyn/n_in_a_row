@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import pickle
 from copy import copy
 
 import redis
 
-from solver.game_state import GameState
-from config import load_config
+from n_in_a_row.game_state import GameState
+from n_in_a_row.config import load_config
 
 
 class GameStateProxy:
@@ -12,7 +14,7 @@ class GameStateProxy:
     def __init__(
             self,
             game_state_id: int,
-            game_state_vault: 'GameStateVault'
+            game_state_vault: GameStateVault
     ):
         self.game_state = None
         self.game_state_id = game_state_id
@@ -26,7 +28,7 @@ class GameStateProxy:
         self._load_game_state()
         return getattr(self.game_state, item)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         self._load_game_state()
         return hash(self.game_state)
 

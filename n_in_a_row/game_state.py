@@ -1,9 +1,11 @@
-from copy import deepcopy
-from typing import Tuple
+from __future__ import annotations
 
-from chip import Chip, swap_chip
-from win_state import WinState, WinStatesCounter
-from game import Game, GameNotFinishedError, GameFinishedError
+from copy import deepcopy
+from typing import Tuple, Optional
+
+from n_in_a_row.chip import Chip, swap_chip
+from n_in_a_row.win_state import WinState, WinStatesCounter
+from n_in_a_row.game import Game, GameNotFinishedError, GameFinishedError
 
 
 class GameState:
@@ -12,7 +14,7 @@ class GameState:
             self,
             game: Game,
             next_chip: Chip,
-            parent: 'GameState' = None,
+            parent: GameState = None,
             copy_game: bool = True
     ):
         if copy_game:
@@ -31,7 +33,7 @@ class GameState:
         self.parent = parent
         self.children = []
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(
             # TODO: maybe having multiple parents will allow to reuse child game states?
             # We can get this game state from different parents
@@ -42,7 +44,7 @@ class GameState:
             str(self.next_chip)
         )
 
-    def make_move(self, index: Tuple[int, int]) -> 'GameState':
+    def make_move(self, index: Tuple[int, int]) -> GameState:
         if self.win_state is not None:
             raise GameFinishedError()
 
@@ -59,7 +61,7 @@ class GameState:
 
         return child
 
-    def propagate_win_state(self, win_state: WinState = None) -> None:
+    def propagate_win_state(self, win_state: Optional[WinState] = None) -> None:
         if self.parent is None:
             return
         if win_state is None:
