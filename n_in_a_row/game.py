@@ -4,6 +4,7 @@ import numpy as np
 
 from n_in_a_row.grid import Grid
 from n_in_a_row.win_state import WinState
+from n_in_a_row.hashable import Hashable, pack_ints
 
 
 def check_win_in_vector(vec: np.array, chips_in_a_row: int) -> WinState:
@@ -54,7 +55,7 @@ def check_win_in_sub_diag(grid: Grid, chips_in_a_row: int) -> WinState:
     return check_win_in_diagonal(grid.grid[::-1], chips_in_a_row)
 
 
-class Game:
+class Game(Hashable):
 
     def __init__(
             self,
@@ -69,12 +70,16 @@ class Game:
             self.grid = Grid(rows_num, cols_num)
         self.chips_in_a_row = chips_in_a_row
 
-    def __hash__(self) -> int:
-        return hash(
-            str(hash(self.grid))
-            +
-            str(self.chips_in_a_row)
+    def __repr__(self) -> str:
+        return '{}(\n{},\nchips_in_a_row={}\n)'.format(
+            self.__class__.__name__,
+            repr(self.grid),
+            self.chips_in_a_row
         )
+
+    def build_hash(self, hash_obj) -> None:
+        self.grid.build_hash(hash_obj)
+        hash_obj.update(pack_ints(self.chips_in_a_row))
 
     def get_win_state(self) -> WinState:
         checks = {

@@ -3,12 +3,13 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Tuple, Optional
 
-from n_in_a_row.chip import Chip, swap_chip
+from n_in_a_row.chip import Chip
 from n_in_a_row.win_state import WinState, WinStatesCounter
 from n_in_a_row.game import Game, GameNotFinishedError, GameFinishedError
+from n_in_a_row.hashable import Hashable
 
 
-class GameState:
+class GameState(Hashable):
 
     def __init__(
             self,
@@ -33,16 +34,29 @@ class GameState:
         self.parent = parent
         self.children = []
 
-    def __hash__(self) -> int:
-        return hash(
-            # TODO: maybe having multiple parents will allow to reuse child game states?
-            # We can get this game state from different parents
-            str(hash(self.parent))
-            +
-            str(hash(self.game))
-            +
-            str(self.next_chip)
-        )
+    def __repr__(self) -> str:
+        return '{}(\n{},\nnext_chip={},\n' \
+               'win_state={},\nwin_states_counter={},' \
+               '\nparent={}\nchildren={}\n), hash={}' \
+            .format(
+                self.__class__.__name__,
+                repr(self.game),
+                repr(self.next_chip),
+                repr(self.win_state),
+                repr(self.win_states_counter),
+                hash(self.parent) if self.parent is not None else 'None',
+                repr([hash(child) for child in self.children]),
+                hash(self)
+            )
+
+    def build_hash(self, hash_obj) -> None:
+        # TODO: maybe having multiple parents will allow to reuse child game states?
+        if self.parent:
+            self.parent.build_hash(hash_obj)
+        else:
+            hash_obj.update(b'\x00')
+        self.game.build_hash(hash_obj)
+        self.next_chip.build_hash(hash_obj)
 
     def make_move(self, index: Tuple[int, int]) -> GameState:
         if self.win_state is not None:
@@ -53,7 +67,7 @@ class GameState:
 
         child = GameState(
             game=game,
-            next_chip=swap_chip(self.next_chip),
+            next_chip=self.next_chip.swap_chip(),
             parent=self,
             copy_game=False
         )

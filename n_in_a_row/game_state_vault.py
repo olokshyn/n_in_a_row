@@ -32,6 +32,10 @@ class GameStateProxy:
         self._load_game_state()
         return hash(self.game_state)
 
+    def __repr__(self) -> str:
+        self._load_game_state()
+        return repr(self.game_state)
+
 
 class GameStateVault:
 
@@ -62,7 +66,7 @@ class GameStateVault:
     def load_game_state(self, game_state_id: int) -> GameState:
         data = self.redis.get(game_state_id)
         if data is None:
-            raise RuntimeError(f'GameState with id f{game_state_id} is not found')
+            raise GameStateNotInVaultError(game_state_id)
         game_state: GameState = pickle.loads(data)
         if game_state.parent is not None:
             game_state.parent = GameStateProxy(game_state.parent, self)
@@ -70,3 +74,12 @@ class GameStateVault:
             GameStateProxy(child, self) for child in game_state.children
         ]
         return game_state
+
+
+class GameStateNotInVaultError(Exception):
+
+    def __init__(self, game_state_id: int, *args):
+        if not args:
+            args = [f'GameState with id f{game_state_id} is not found']
+        super().__init__(*args)
+        self.game_state_id = game_state_id

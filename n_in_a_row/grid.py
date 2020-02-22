@@ -4,9 +4,10 @@ import numpy as np
 
 
 from n_in_a_row.chip import Chip
+from n_in_a_row.hashable import Hashable, pack_ints
 
 
-class Grid:
+class Grid(Hashable):
 
     def __init__(self, rows_num: int, col_num: int):
         self.grid = np.full(
@@ -35,7 +36,7 @@ class Grid:
         return iter(self.grid)
 
     def __repr__(self) -> str:
-        return repr(self.grid)
+        return '{}(\n{}\n)'.format(self.__class__.__name__, repr(self.grid))
 
     def __setitem__(self, key: Tuple[int, int], chip: Chip) -> None:
         self._check_index(key)
@@ -62,12 +63,9 @@ class Grid:
             raise AttributeError()
         return getattr(self.grid, item)
 
-    def __hash__(self) -> int:
-        return hash(
-            str(hash(self.grid.shape))
-            +
-            str(hash(self.grid.data.tobytes()))
-        )
+    def build_hash(self, hash_obj) -> None:
+        hash_obj.update(pack_ints(*self.grid.shape))
+        hash_obj.update(self.grid.data.tobytes())
 
     @property
     def rows(self) -> int:

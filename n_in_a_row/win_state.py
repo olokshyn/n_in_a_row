@@ -31,6 +31,12 @@ class WinStatesCounter:
             for ws in WinState.possible_win_states()
         })
 
+    def __repr__(self) -> str:
+        return '{}({})'.format(
+            self.__class__.__name__,
+            str({k.name: v for k, v in self.win_states.items()})
+        )
+
     def record_win_state(self, win_state: WinState) -> None:
         if win_state is None:
             return
