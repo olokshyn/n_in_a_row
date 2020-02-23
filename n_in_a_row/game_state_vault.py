@@ -46,16 +46,22 @@ class GameStateVault:
             port=config['redis']['port']
         )
 
-    def save_game_state(self, game_state: GameState) -> int:
+    def save_game_state(
+            self,
+            game_state: GameState,
+            *,
+            overwrite: bool = False,
+            overwrite_children: bool = False
+    ) -> int:
         game_state_id = hash(game_state)
-        if game_state_id in self.redis:
+        if not overwrite and game_state_id in self.redis:
             return game_state_id
 
         game_state = copy(game_state)
-        if game_state.parent is not None:
-            game_state.parent = hash(game_state.parent)
+        if game_state.parents:
+            game_state.parents = [hash(parent) for parent in game_state.parents]
         game_state.children = [
-            self.save_game_state(child) for child in game_state.children
+            self.save_game_state(child, overwrite=overwrite_children) for child in game_state.children
         ]
 
         data = pickle.dumps(game_state)
@@ -68,8 +74,8 @@ class GameStateVault:
         if data is None:
             raise GameStateNotInVaultError(game_state_id)
         game_state: GameState = pickle.loads(data)
-        if game_state.parent is not None:
-            game_state.parent = GameStateProxy(game_state.parent, self)
+        if game_state.parents:
+            game_state.parents = [GameStateProxy(parent, self) for parent in game_state.parents]
         game_state.children = [
             GameStateProxy(child, self) for child in game_state.children
         ]

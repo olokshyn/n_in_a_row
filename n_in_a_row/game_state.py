@@ -31,30 +31,27 @@ class GameState(Hashable):
         except GameNotFinishedError:
             self.win_state = None
 
-        self.parent = parent
+        self.parents = []
+        if parent is not None:
+            self.parents.append(parent)
         self.children = []
 
     def __repr__(self) -> str:
         return '{}(\n{},\nnext_chip={},\n' \
                'win_state={},\nwin_states_counter={},' \
-               '\nparent={}\nchildren={}\n), hash={}' \
+               '\nparents={}\nchildren={}\n), hash={}' \
             .format(
                 self.__class__.__name__,
                 repr(self.game),
                 repr(self.next_chip),
                 repr(self.win_state),
                 repr(self.win_states_counter),
-                hash(self.parent) if self.parent is not None else 'None',
+                repr([hash(parent) for parent in self.parents]),
                 repr([hash(child) for child in self.children]),
                 hash(self)
             )
 
     def build_hash(self, hash_obj) -> None:
-        # TODO: maybe having multiple parents will allow to reuse child game states?
-        if self.parent:
-            self.parent.build_hash(hash_obj)
-        else:
-            hash_obj.update(b'\x00')
         self.game.build_hash(hash_obj)
         self.next_chip.build_hash(hash_obj)
 
@@ -74,14 +71,3 @@ class GameState(Hashable):
         self.children.append(child)
 
         return child
-
-    def propagate_win_state(self, win_state: Optional[WinState] = None) -> None:
-        if self.parent is None:
-            return
-        if win_state is None:
-            win_state = self.win_state
-        if win_state is None:
-            raise ValueError('win_state must be specified')
-
-        self.parent.win_states_counter.record_win_state(win_state)
-        self.parent.propagate_win_state(win_state)
