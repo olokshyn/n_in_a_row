@@ -11,13 +11,9 @@ class GameTreeBuilder:
 
     def __init__(
             self,
-            game_state: GameState,
-            play_as: Optional[Chip] = None
+            game_state: GameState
     ):
         self.root = game_state
-        self.play_as = play_as
-        if self.play_as is None:
-            self.play_as = game_state.next_chip
         self.leaf_nodes = []
         self.leaf_node_ids = []
 
@@ -43,6 +39,8 @@ class GameTreeBuilder:
             except GameStateNotInVaultError:
                 self._build_next_game_states(next_game_state)
 
+        self.vault.save_game_state(game_state)
+
     def _propagate_win_state(self, game_state: GameState, win_state: Optional[WinState] = None) -> None:
         if not game_state.parents:
             return
@@ -61,7 +59,6 @@ class GameTreeBuilder:
             self.root = self.vault.load_game_state(hash(self.root))
         except GameStateNotInVaultError:
             self._build_next_game_states(self.root)
-            self.vault.save_game_state(self.root)
 
         for leaf_node_id in self.leaf_node_ids:
             self._propagate_win_state(self.vault.load_game_state(leaf_node_id))
@@ -71,7 +68,7 @@ class GameTreeBuilder:
 
 
 if __name__ == '__main__':
-    nika = GameTreeBuilder(
+    tree_builder = GameTreeBuilder(
         GameState(
             Grid(rows_num=2, cols_num=2),
             next_chip=Chip.GREEN,
@@ -82,9 +79,9 @@ if __name__ == '__main__':
     from time import time
 
     start = time()
-    nika.build_solution_tree()
+    tree_builder.build_solution_tree()
     end = time()
 
     print(f'Took {end - start} secs')
 
-    print(nika)
+    print(tree_builder)
