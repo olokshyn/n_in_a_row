@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List, Dict, Set
 
 from n_in_a_row.chip import Chip
-from n_in_a_row.win_state import WinStatesCounter
 from n_in_a_row.grid import Grid
 from n_in_a_row.game import get_win_state, GameNotFinishedError, GameFinishedError
+from n_in_a_row.win_state import WinState
 from n_in_a_row.hashable import Hashable, pack_ints
 
 
@@ -27,17 +27,18 @@ class GameState(Hashable):
         self.next_chip = next_chip
         self.chips_in_a_row = chips_in_a_row
 
-        self.win_states_counter = WinStatesCounter()
         try:
             self.win_state = get_win_state(self.grid, self.chips_in_a_row)
-            self.win_states_counter.record_win_state(self.win_state)
         except GameNotFinishedError:
             self.win_state = None
 
-        self.parents = []
+        self.win_states_counter: Optional[Dict[WinState, int]] = None
+
+        self.parents: List[GameState] = []
         if parent is not None:
             self.parents.append(parent)
-        self.children = []
+        self.children: List[GameState] = []
+        self.child_leaf_node_ids: Set[int] = set()
 
     def __repr__(self) -> str:
         return '{}(\n{},\nnext_chip={},\nchips_in_a_row={},\n' \

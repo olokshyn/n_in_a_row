@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pickle
 from copy import copy, deepcopy
+from typing import cast
 
 import redis
 
@@ -58,8 +59,7 @@ class GameStateVault:
             self,
             game_state: GameState,
             *,
-            overwrite: bool = False,
-            overwrite_children: bool = False
+            overwrite: bool = True
     ) -> int:
         game_state_id = hash(game_state)
         if not overwrite and game_state_id in self.redis:
@@ -68,9 +68,7 @@ class GameStateVault:
         game_state = copy(game_state)
         if game_state.parents:
             game_state.parents = [hash(parent) for parent in game_state.parents]
-        game_state.children = [
-            self.save_game_state(child, overwrite=overwrite_children) for child in game_state.children
-        ]
+        game_state.children = [hash(child) for child in game_state.children]
 
         data = pickle.dumps(game_state)
         if not self.redis.set(game_state_id, data):
@@ -83,9 +81,9 @@ class GameStateVault:
             raise GameStateNotInVaultError(game_state_id)
         game_state: GameState = pickle.loads(data)
         if game_state.parents:
-            game_state.parents = [GameStateProxy(parent, self) for parent in game_state.parents]
+            game_state.parents = [GameStateProxy(cast(int, parent), self) for parent in game_state.parents]
         game_state.children = [
-            GameStateProxy(child, self) for child in game_state.children
+            GameStateProxy(cast(int, child), self) for child in game_state.children
         ]
         return game_state
 
