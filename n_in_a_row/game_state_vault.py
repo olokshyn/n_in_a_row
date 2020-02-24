@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pickle
-from copy import copy
+from copy import copy, deepcopy
 
 import redis
 
@@ -31,6 +31,14 @@ class GameStateProxy:
     def __hash__(self) -> int:
         self._load_game_state()
         return hash(self.game_state)
+
+    def __copy__(self):
+        self._load_game_state()
+        return copy(self.game_state)
+
+    def __deepcopy__(self, memodict):
+        self._load_game_state()
+        return deepcopy(self.game_state)
 
     def __repr__(self) -> str:
         self._load_game_state()

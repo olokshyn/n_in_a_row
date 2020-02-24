@@ -9,9 +9,9 @@ from n_in_a_row.hashable import Hashable, pack_ints
 
 class Grid(Hashable):
 
-    def __init__(self, rows_num: int, col_num: int):
+    def __init__(self, rows_num: int, cols_num: int):
         self.grid = np.full(
-            shape=(rows_num, col_num),
+            shape=(rows_num, cols_num),
             fill_value=Chip.EMPTY.value
         )
 

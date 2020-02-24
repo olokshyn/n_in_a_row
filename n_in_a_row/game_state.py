@@ -4,29 +4,32 @@ from copy import deepcopy
 from typing import Tuple, Optional
 
 from n_in_a_row.chip import Chip
-from n_in_a_row.win_state import WinState, WinStatesCounter
-from n_in_a_row.game import Game, GameNotFinishedError, GameFinishedError
-from n_in_a_row.hashable import Hashable
+from n_in_a_row.win_state import WinStatesCounter
+from n_in_a_row.grid import Grid
+from n_in_a_row.game import get_win_state, GameNotFinishedError, GameFinishedError
+from n_in_a_row.hashable import Hashable, pack_ints
 
 
 class GameState(Hashable):
 
     def __init__(
             self,
-            game: Game,
+            grid: Grid,
             next_chip: Chip,
-            parent: GameState = None,
-            copy_game: bool = True
+            chips_in_a_row: int,
+            parent: Optional[GameState] = None,
+            copy_grid: bool = True
     ):
-        if copy_game:
-            self.game = deepcopy(game)
+        if copy_grid:
+            self.grid = deepcopy(grid)
         else:
-            self.game = game
+            self.grid = grid
         self.next_chip = next_chip
+        self.chips_in_a_row = chips_in_a_row
 
         self.win_states_counter = WinStatesCounter()
         try:
-            self.win_state = self.game.get_win_state()
+            self.win_state = get_win_state(self.grid, self.chips_in_a_row)
             self.win_states_counter.record_win_state(self.win_state)
         except GameNotFinishedError:
             self.win_state = None
@@ -37,13 +40,14 @@ class GameState(Hashable):
         self.children = []
 
     def __repr__(self) -> str:
-        return '{}(\n{},\nnext_chip={},\n' \
+        return '{}(\n{},\nnext_chip={},\nchips_in_a_row={},\n' \
                'win_state={},\nwin_states_counter={},' \
                '\nparents={}\nchildren={}\n), hash={}' \
             .format(
                 self.__class__.__name__,
-                repr(self.game),
+                repr(self.grid),
                 repr(self.next_chip),
+                repr(self.chips_in_a_row),
                 repr(self.win_state),
                 repr(self.win_states_counter),
                 repr([hash(parent) for parent in self.parents]),
@@ -52,21 +56,23 @@ class GameState(Hashable):
             )
 
     def build_hash(self, hash_obj) -> None:
-        self.game.build_hash(hash_obj)
+        self.grid.build_hash(hash_obj)
         self.next_chip.build_hash(hash_obj)
+        hash_obj.update(pack_ints(self.chips_in_a_row))
 
     def make_move(self, index: Tuple[int, int]) -> GameState:
         if self.win_state is not None:
             raise GameFinishedError()
 
-        game = deepcopy(self.game)
-        game.grid[index] = self.next_chip
+        grid = deepcopy(self.grid)
+        grid[index] = self.next_chip
 
         child = GameState(
-            game=game,
+            grid=grid,
             next_chip=self.next_chip.swap_chip(),
+            chips_in_a_row=self.chips_in_a_row,
             parent=self,
-            copy_game=False
+            copy_grid=False
         )
         self.children.append(child)
 

@@ -1,13 +1,13 @@
 from typing import Optional
 
 from n_in_a_row.chip import Chip
-from n_in_a_row.game import Game
+from n_in_a_row.grid import Grid
 from n_in_a_row.game_state import GameState
 from n_in_a_row.win_state import WinState
 from n_in_a_row.game_state_vault import GameStateVault, GameStateNotInVaultError
 
 
-class Nika:
+class GameTreeBuilder:
 
     def __init__(
             self,
@@ -29,8 +29,8 @@ class Nika:
             return
 
         possible_moves = []
-        for col in range(game_state.game.grid.cols):
-            row = game_state.game.grid.find_empty_row(col)
+        for col in range(game_state.grid.cols):
+            row = game_state.grid.find_empty_row(col)
             if row >= 0:
                 possible_moves.append((row, col))
 
@@ -71,10 +71,11 @@ class Nika:
 
 
 if __name__ == '__main__':
-    nika = Nika(
+    nika = GameTreeBuilder(
         GameState(
-            Game(rows_num=3, cols_num=2, chips_in_a_row=2),
-            next_chip=Chip.GREEN
+            Grid(rows_num=2, cols_num=2),
+            next_chip=Chip.GREEN,
+            chips_in_a_row=2
         )
     )
 
