@@ -1,5 +1,5 @@
 from collections import deque, Counter
-from typing import Deque
+from typing import Deque, List, Set
 
 from n_in_a_row.chip import Chip
 from n_in_a_row.grid import Grid
@@ -45,46 +45,43 @@ class GameTreeBuilder:
 
             self.vault.save_game_state(game_state)
 
-    def _propagate_leaf_nodes(self) -> None:
-        leaf_nodes = self.leaf_nodes
-        for game_state, game_state_id in zip(leaf_nodes, self.leaf_node_ids):
-            game_state.child_leaf_node_ids.add(game_state_id)
+    def _build_lower_parallel_regulation(self) -> List[Set[int]]:
+        regulation: List[Set[int]] = []
+        leaf_nodes = self.get_leaf_nodes()
+        next_leaf_nodes = []
+        excluded_node_ids: Set[int] = set()
+        while leaf_nodes:
+            for node in leaf_nodes:
+                node_id = hash(node)
+                excluded_node_ids.add(node_id)
+                for parent in node.parents:
+                    parent_children = set(parent.children) - excluded_node_ids
+                    if not parent_children:
+                        next_leaf_nodes.append(parent)
+            regulation.append({hash(node) for node in leaf_nodes})
+            leaf_nodes = next_leaf_nodes
+            next_leaf_nodes = []
+        return regulation
 
-        # FIXME: instead of a queue use parallel regulation to ensure children are always processed before parents
-        game_states_queue: Deque[GameState] = deque(leaf_nodes)
-        while game_states_queue:
-            game_state = game_states_queue.popleft()
+    def _propagate_win_states(self) -> None:
+        regulation = self._build_lower_parallel_regulation()
+        for level_node_ids in regulation:
+            for node_id in level_node_ids:
+                node = self.vault.load_game_state(node_id)
+                if node.win_state is not None:
+                    node.child_leaf_node_ids.add(node_id)
+                    win_states = [node.win_state]
+                else:
+                    for child in node.children:
+                        node.child_leaf_node_ids.update(child.child_leaf_node_ids)
+                    win_states = [
+                        self.vault.load_game_state(game_state_id).win_state
+                        for game_state_id in node.child_leaf_node_ids
+                    ]
+                node.win_states_counter = Counter(win_states)
+                self.vault.save_game_state(node)
 
-            # Add to already present child_leaf_node_ids
-            game_state.child_leaf_node_ids.update(
-                self.vault.load_game_state(hash(game_state))
-                    .child_leaf_node_ids
-            )
-
-            self.vault.save_game_state(game_state)
-
-            if not game_state.parents:
-                continue
-            for parent in game_state.parents:
-                parent.child_leaf_node_ids.update(game_state.child_leaf_node_ids)
-                game_states_queue.append(parent)
-
-    def _update_win_states_counter(self) -> None:
-        self.root = self.vault.load_game_state(hash(self.root))
-        game_states_stack: Deque[GameState] = deque([self.root])
-        while game_states_stack:
-            game_state = game_states_stack.pop()
-
-            win_states = [
-                self.vault.load_game_state(game_state_id).win_state
-                for game_state_id in game_state.child_leaf_node_ids
-            ]
-            game_state.win_states_counter = Counter(win_states)
-            self.vault.save_game_state(game_state)
-            game_states_stack.extend(game_state.children)
-
-    @property
-    def leaf_nodes(self):
+    def get_leaf_nodes(self):
         return [self.vault.load_game_state(node_id) for node_id in self.leaf_node_ids]
 
     def build_solution_tree(self) -> None:
@@ -92,8 +89,7 @@ class GameTreeBuilder:
             self.root = self.vault.load_game_state(hash(self.root))
         except GameStateNotInVaultError:
             self._build_solution_tree()
-            self._propagate_leaf_nodes()
-            self._update_win_states_counter()
+            self._propagate_win_states()
 
             self.root = self.vault.load_game_state(hash(self.root))
 

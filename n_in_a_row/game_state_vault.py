@@ -41,6 +41,18 @@ class GameStateProxy:
         self._load_game_state()
         return deepcopy(self.game_state)
 
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return self.game_state_id == other
+        self._load_game_state()
+        return self.game_state == other
+
+    def __ne__(self, other):
+        if isinstance(other, int):
+            return self.game_state_id != other
+        self._load_game_state()
+        return self.game_state != other
+
     def __repr__(self) -> str:
         self._load_game_state()
         return repr(self.game_state)
