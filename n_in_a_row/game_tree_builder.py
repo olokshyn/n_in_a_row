@@ -37,7 +37,7 @@ class GameTreeBuilder:
             for move in possible_moves:
                 next_game_state = game_state.make_move(move)
                 try:
-                    next_game_state = self.vault.load_game_state(hash(next_game_state))
+                    next_game_state = self.vault.load_game_state(next_game_state.game_state_id)
                     next_game_state.parents.append(game_state)
                     self.vault.save_game_state(next_game_state)
                 except GameStateNotInVaultError:
@@ -52,13 +52,13 @@ class GameTreeBuilder:
         excluded_node_ids: Set[int] = set()
         while leaf_nodes:
             for node in leaf_nodes:
-                node_id = hash(node)
+                node_id = node.game_state_id
                 excluded_node_ids.add(node_id)
                 for parent in node.parents:
                     parent_children = set(parent.children) - excluded_node_ids
                     if not parent_children:
                         next_leaf_nodes.append(parent)
-            regulation.append({hash(node) for node in leaf_nodes})
+            regulation.append({node.game_state_id for node in leaf_nodes})
             leaf_nodes = next_leaf_nodes
             next_leaf_nodes = []
         return regulation
@@ -86,12 +86,12 @@ class GameTreeBuilder:
 
     def build_solution_tree(self) -> None:
         try:
-            self.root = self.vault.load_game_state(hash(self.root))
+            self.root = self.vault.load_game_state(self.root.game_state_id)
         except GameStateNotInVaultError:
             self._build_solution_tree()
             self._propagate_win_states()
 
-            self.root = self.vault.load_game_state(hash(self.root))
+            self.root = self.vault.load_game_state(self.root.game_state_id)
 
 
 if __name__ == '__main__':

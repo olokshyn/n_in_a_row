@@ -30,8 +30,7 @@ class GameStateProxy:
         return getattr(self.game_state, item)
 
     def __hash__(self) -> int:
-        self._load_game_state()
-        return hash(self.game_state)
+        return self.game_state_id
 
     def __copy__(self):
         self._load_game_state()
@@ -73,14 +72,14 @@ class GameStateVault:
             *,
             overwrite: bool = True
     ) -> int:
-        game_state_id = hash(game_state)
+        game_state_id = game_state.game_state_id
         if not overwrite and game_state_id in self.redis:
             return game_state_id
 
         game_state = copy(game_state)
         if game_state.parents:
-            game_state.parents = [hash(parent) for parent in game_state.parents]
-        game_state.children = [hash(child) for child in game_state.children]
+            game_state.parents = [parent.game_state_id for parent in game_state.parents]
+        game_state.children = [child.game_state_id for child in game_state.children]
 
         data = pickle.dumps(game_state)
         if not self.redis.set(game_state_id, data):

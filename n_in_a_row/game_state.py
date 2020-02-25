@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from functools import cached_property
 from typing import Tuple, Optional, List, Dict, Set
 
 from n_in_a_row.chip import Chip
@@ -43,7 +44,7 @@ class GameState(Hashable):
     def __repr__(self) -> str:
         return '{}(\n{},\nnext_chip={},\nchips_in_a_row={},\n' \
                'win_state={},\nwin_states_counter={},' \
-               '\nparents={}\nchildren={}\n), hash={}' \
+               '\nparents={}\nchildren={}\n), game_state_id={}' \
             .format(
                 self.__class__.__name__,
                 repr(self.grid),
@@ -51,10 +52,14 @@ class GameState(Hashable):
                 repr(self.chips_in_a_row),
                 repr(self.win_state),
                 repr(self.win_states_counter),
-                repr([hash(parent) for parent in self.parents]),
-                repr([hash(child) for child in self.children]),
-                hash(self)
+                repr([parent.game_state_id for parent in self.parents]),
+                repr([child.game_state_id for child in self.children]),
+                self.game_state_id
             )
+
+    @cached_property
+    def game_state_id(self) -> int:
+        return hash(self)
 
     def build_hash(self, hash_obj) -> None:
         self.grid.build_hash(hash_obj)
