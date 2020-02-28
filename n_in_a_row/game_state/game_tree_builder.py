@@ -1,10 +1,8 @@
 from collections import deque, Counter
 from typing import Deque, List, Set
 
-from n_in_a_row.chip import Chip
-from n_in_a_row.grid import Grid
-from n_in_a_row.game_state import GameState
-from n_in_a_row.game_state_vault import GameStateVault, GameStateNotInVaultError
+from .game_state import GameState
+from .game_state_vault import GameStateVault, GameStateNotInVaultError
 
 
 class GameTreeBuilder:
@@ -92,23 +90,3 @@ class GameTreeBuilder:
             self._propagate_win_states()
 
             self.root = self.vault.load_game_state(self.root.game_state_id)
-
-
-if __name__ == '__main__':
-    tree_builder = GameTreeBuilder(
-        GameState(
-            Grid(rows_num=2, cols_num=2),
-            next_chip=Chip.GREEN,
-            chips_in_a_row=2
-        )
-    )
-
-    from time import time
-
-    start = time()
-    tree_builder.build_solution_tree()
-    end = time()
-
-    print(f'Took {end - start} secs')
-
-    print(tree_builder)

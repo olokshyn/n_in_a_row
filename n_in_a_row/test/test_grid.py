@@ -7,13 +7,13 @@ from n_in_a_row.chip import Chip
 class TestSetterGetter(TestCase):
 
     def test_default_initialized(self):
-        g = grid.Grid(5, 7)
+        g = grid.Grid(rows=5, cols=7)
         for i in range(5):
             for j in range(7):
                 self.assertEqual(Chip.EMPTY, g[i, j])
 
     def test_out_of_bounds_index(self):
-        g = grid.Grid(7, 6)
+        g = grid.Grid(rows=7, cols=6)
         self.assertRaises(IndexError, lambda: g[7, 6])
         self.assertRaises(IndexError, lambda: g[0, 6])
         self.assertRaises(IndexError, lambda: g[7, 5])
@@ -26,7 +26,7 @@ class TestSetterGetter(TestCase):
         self.assertRaises(TypeError, lambda: g[3])
 
     def test_set(self):
-        g = grid.Grid(12, 8)
+        g = grid.Grid(rows=12, cols=8)
         for i in range(11, -1, -1):
             for j in range(8):
                 g[i, j] = Chip.GREEN if j % 2 == 0 else Chip.RED
@@ -36,7 +36,7 @@ class TestSetterGetter(TestCase):
                 self.assertEqual(g[i, j], Chip.GREEN if j % 2 == 0 else Chip.RED)
 
     def test_out_of_bounds_set(self):
-        g = grid.Grid(3, 4)
+        g = grid.Grid(rows=3, cols=4)
 
         def do_assign(row, col):
             g[row, col] = Chip.GREEN
@@ -49,7 +49,7 @@ class TestSetterGetter(TestCase):
         self.assertRaises(IndexError, do_assign, -2, -2)
 
     def test_invalid_value_set(self):
-        g = grid.Grid(6, 7)
+        g = grid.Grid(rows=6, cols=7)
 
         def do_assign(row, col, value):
             g[row, col] = value
@@ -65,7 +65,7 @@ class TestSetterGetter(TestCase):
         self.assertRaises(ValueError, do_assign, 5, 2, Chip.EMPTY)
 
     def test_invalid_cell_set(self):
-        g = grid.Grid(4, 3)
+        g = grid.Grid(rows=4, cols=3)
 
         def do_assign(row, col, value):
             g[row, col] = value
@@ -106,13 +106,13 @@ class TestSetterGetter(TestCase):
 class TestFindEmptyRow(TestCase):
 
     def test_empty_grid(self):
-        g = grid.Grid(10, 12)
+        g = grid.Grid(rows=10, cols=12)
 
         for col in range(12):
             self.assertEqual(9, g.find_empty_row(col))
 
     def test_full_grid(self):
-        g = grid.Grid(10, 12)
+        g = grid.Grid(rows=10, cols=12)
 
         for i in range(9, -1, -1):
             for j in range(12):
@@ -122,7 +122,7 @@ class TestFindEmptyRow(TestCase):
             self.assertEqual(-1, g.find_empty_row(col))
 
     def test_various_grid(self):
-        g = grid.Grid(5, 6)
+        g = grid.Grid(rows=5, cols=6)
 
         g[4, 0] = Chip.GREEN
         g[3, 0] = Chip.RED
@@ -155,7 +155,7 @@ class TestFindEmptyRow(TestCase):
 class TestDropChip(TestCase):
 
     def test_empty_grid(self):
-        g = grid.Grid(8, 5)
+        g = grid.Grid(rows=8, cols=5)
 
         for col in range(5):
             g.drop_chip(col, Chip.GREEN)
@@ -167,7 +167,7 @@ class TestDropChip(TestCase):
                 self.assertEqual(Chip.EMPTY, g[row, col])
 
     def test_full_grid(self):
-        g = grid.Grid(3, 3)
+        g = grid.Grid(rows=3, cols=3)
 
         for i in range(2, -1, -1):
             for j in range(3):
@@ -181,7 +181,7 @@ class TestDropChip(TestCase):
                 self.assertEqual(Chip.GREEN, g[i, j])
 
     def test_various_grid(self):
-        g = grid.Grid(5, 6)
+        g = grid.Grid(rows=5, cols=6)
 
         g[4, 0] = Chip.GREEN
         g[3, 0] = Chip.RED
@@ -234,7 +234,7 @@ class TestDropChip(TestCase):
 class TestIsFull(TestCase):
 
     def test(self):
-        g = grid.Grid(8, 5)
+        g = grid.Grid(rows=8, cols=5)
         self.assertFalse(g.is_full())
 
         g[7, 1] = Chip.GREEN
