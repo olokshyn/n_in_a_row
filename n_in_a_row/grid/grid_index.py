@@ -1,9 +1,20 @@
 from __future__ import annotations
 
-from n_in_a_row.hashable import Hashable, pack_ints
+from n_in_a_row.config import load_config
 
 
-class GridIndex(Hashable):
+class GridIndexMeta(type):
+
+    def __new__(cls, *args, **kwargs):
+        clsobj = super().__new__(cls, *args, **kwargs)
+        config = load_config()
+        clsobj.MAX_GRID_COLS = config['max_grid_cols']
+        return clsobj
+
+
+class GridIndex(metaclass=GridIndexMeta):
+
+    MAX_GRID_COLS = None
 
     __slots__ = ('row', 'col')
 
@@ -31,7 +42,4 @@ class GridIndex(Hashable):
         return not self.__eq__(other)
 
     def __hash__(self) -> int:
-        return super().__hash__()
-
-    def build_hash(self, hash_obj) -> None:
-        hash_obj.update(pack_ints(self.row, self.col))
+        return self.row * self.MAX_GRID_COLS + self.col
