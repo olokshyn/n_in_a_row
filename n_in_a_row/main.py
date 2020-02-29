@@ -7,9 +7,9 @@ from game_state import GameTreeBuilder
 if __name__ == '__main__':
     tree_builder = GameTreeBuilder(
         GameState(
-            Grid(rows=2, cols=2),
+            Grid(rows=3, cols=3),
             next_chip=Chip.GREEN,
-            chips_in_a_row=2
+            chips_in_a_row=3
         )
     )
 

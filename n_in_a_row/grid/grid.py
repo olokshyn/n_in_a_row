@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pickle import dumps
-from typing import Tuple, List, Dict, Generator, Optional, Union
+from typing import Tuple, List, Dict, Optional, Union
 
 from n_in_a_row.chip import Chip
 from n_in_a_row.win_state import WinState
@@ -20,7 +20,12 @@ class Grid(Hashable):
         self.grid: Dict[GridIndex, Chip] = {}
 
         # Derived data used for optimization
-        self.unions = CellUnionManager()
+        self.unions = {
+            'row': CellUnionManager(),
+            'col': CellUnionManager(),
+            'diag': CellUnionManager(),
+            'subdiag': CellUnionManager()
+        }
         self.chips_in_cols: List[int] = [0] * self.cols
 
     def __repr__(self) -> str:
@@ -64,12 +69,10 @@ class Grid(Hashable):
         return all(x == self.rows for x in self.chips_in_cols)
 
     def get_win_state(self, chips_in_a_row: int) -> Optional[WinState]:
-        if not self.unions:
-            return None
-
-        index, size = self.unions.get_max_union_root_and_size()
-        if size >= chips_in_a_row:
-            return WinState.from_chip(self.grid[index])
+        for unions in (u for u in self.unions.values() if u):
+            index, size = unions.get_max_union_root_and_size()
+            if size >= chips_in_a_row:
+                return WinState.from_chip(self.grid[index])
 
         if self.is_full():
             return WinState.DRAW
@@ -91,38 +94,39 @@ class Grid(Hashable):
         if chip == Chip.EMPTY:
             raise ValueError('Cannot use empty chip')
 
-    def _neighbor_cells(self, index: GridIndex) -> Generator[GridIndex]:
+    def _set_chip(self, index: GridIndex, chip: Chip) -> None:
+        self.grid[index] = chip
+        for unions in self.unions.values():
+            unions.add_cell(index)
+        self.chips_in_cols[index.col] += 1
+
         row, col = index
         up = row > 0
         down = row < self.rows - 1
         left = col > 0
         right = col < self.cols - 1
 
-        if up:
-            yield row - 1, col
-            if left:
-                yield GridIndex(row - 1, col - 1)
-            if right:
-                yield GridIndex(row - 1, col + 1)
-        if left:
-            yield GridIndex(row, col - 1)
-        if right:
-            yield GridIndex(row, col + 1)
-        if down:
-            yield GridIndex(row + 1, col)
-            if left:
-                yield GridIndex(row + 1, col - 1)
-            if right:
-                yield GridIndex(row + 1, col + 1)
-
-    def _set_chip(self, index: GridIndex, chip: Chip) -> None:
-        self.grid[index] = chip
-        self.unions.add_cell(index)
-        self.chips_in_cols[index.col] += 1
-
-        for neighbor_index in self._neighbor_cells(index):
+        def unite(nrow: int, ncol: int, unions: CellUnionManager):
+            neighbor_index = GridIndex(nrow, ncol)
             if self.grid[index] == self.grid.get(neighbor_index, Chip.EMPTY):
-                self.unions.unite_cells(index, neighbor_index)
+                unions.unite_cells(index, neighbor_index)
+
+        if up:
+            unite(row - 1, col, self.unions['col'])
+            if left:
+                unite(row - 1, col - 1, self.unions['diag'])
+            if right:
+                unite(row - 1, col + 1, self.unions['subdiag'])
+        if left:
+            unite(row, col - 1, self.unions['row'])
+        if right:
+            unite(row, col + 1, self.unions['row'])
+        if down:
+            unite(row + 1, col, self.unions['col'])
+            if left:
+                unite(row + 1, col - 1, self.unions['subdiag'])
+            if right:
+                unite(row + 1, col + 1, self.unions['diag'])
 
 
 class GridError(RuntimeError):
