@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from pickle import dumps
-from typing import Tuple, List, Dict, Optional, Union
+from typing import Tuple, List, Optional, Union
+
+import numpy as np
 
 from n_in_a_row.chip import Chip
 from n_in_a_row.win_state import WinState
 from n_in_a_row.hashable import Hashable, pack_ints
+from n_in_a_row.config import load_config
 
 from .grid_index import GridIndex
 from .cell_union_manager import CellUnionManager
@@ -14,10 +16,17 @@ from .cell_union_manager import CellUnionManager
 class Grid(Hashable):
 
     def __init__(self, rows: int, cols: int):
+        config = load_config()
+        max_rows, max_cols = config['max_grid_rows'], config['max_grid_cols']
+        if rows > max_rows or cols > max_cols:
+            raise ValueError(
+                f'Grid size ({rows}, {cols}) is greater than the max size ({max_rows}, {max_cols})'
+            )
+
         # Data that defines the grid
         self.rows = rows
         self.cols = cols
-        self.grid: Dict[GridIndex, Chip] = {}
+        self.grid = np.full((self.rows, self.cols), Chip.EMPTY.value)
 
         # Derived data used for optimization
         self.unions = {
@@ -36,22 +45,22 @@ class Grid(Hashable):
     def __setitem__(self, index: Union[GridIndex, Tuple[int, int]], chip: Chip) -> None:
         index = self._check_index(index)
         self._check_chip(chip)
-        if index in self.grid:
+        if self.grid[index.ii] != Chip.EMPTY.value:
             raise CellOccupiedError(index)
         row, col = index
         next_row = row + 1
-        if next_row < self.rows and GridIndex(next_row, col) not in self.grid:
+        if next_row < self.rows and self.grid[next_row, col] == Chip.EMPTY.value:
             raise CellIsDanglingError(index)
 
         self._set_chip(index, chip)
 
     def __getitem__(self, index: Union[GridIndex, Tuple[int, int]]) -> Chip:
         index = self._check_index(index)
-        return self.grid.get(index, Chip.EMPTY)
+        return Chip(self.grid[index.ii])
 
     def build_hash(self, hash_obj) -> None:
         hash_obj.update(pack_ints(self.rows, self.cols))
-        hash_obj.update(dumps(self.grid))
+        hash_obj.update(self.grid.tobytes())
 
     def find_empty_row(self, col: int) -> int:
         if col < 0 or col >= self.cols:
@@ -69,10 +78,10 @@ class Grid(Hashable):
         return all(x == self.rows for x in self.chips_in_cols)
 
     def get_win_state(self, chips_in_a_row: int) -> Optional[WinState]:
-        for unions in (u for u in self.unions.values() if u):
+        for unions in self.unions.values():
             index, size = unions.get_max_union_root_and_size()
             if size >= chips_in_a_row:
-                return WinState.from_chip(self.grid[index])
+                return WinState.from_chip(Chip(self.grid[index.ii]))
 
         if self.is_full():
             return WinState.DRAW
@@ -95,9 +104,7 @@ class Grid(Hashable):
             raise ValueError('Cannot use empty chip')
 
     def _set_chip(self, index: GridIndex, chip: Chip) -> None:
-        self.grid[index] = chip
-        for unions in self.unions.values():
-            unions.add_cell(index)
+        self.grid[index.ii] = chip.value
         self.chips_in_cols[index.col] += 1
 
         row, col = index
@@ -108,7 +115,7 @@ class Grid(Hashable):
 
         def unite(nrow: int, ncol: int, unions: CellUnionManager):
             neighbor_index = GridIndex(nrow, ncol)
-            if self.grid[index] == self.grid.get(neighbor_index, Chip.EMPTY):
+            if self.grid[index.ii] == self.grid[neighbor_index.ii]:
                 unions.unite_cells(index, neighbor_index)
 
         if up:

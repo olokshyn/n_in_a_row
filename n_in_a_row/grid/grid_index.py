@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Tuple
+
 from n_in_a_row.config import load_config
 
 
@@ -8,12 +10,14 @@ class GridIndexMeta(type):
     def __new__(cls, *args, **kwargs):
         clsobj = super().__new__(cls, *args, **kwargs)
         config = load_config()
+        clsobj.MAX_GRID_ROWS = config['max_grid_rows']
         clsobj.MAX_GRID_COLS = config['max_grid_cols']
         return clsobj
 
 
 class GridIndex(metaclass=GridIndexMeta):
 
+    MAX_GRID_ROWS = None
     MAX_GRID_COLS = None
 
     __slots__ = ('row', 'col')
@@ -43,3 +47,19 @@ class GridIndex(metaclass=GridIndexMeta):
 
     def __hash__(self) -> int:
         return self.row * self.MAX_GRID_COLS + self.col
+
+    @property
+    def i(self) -> int:
+        return self.row * self.MAX_GRID_COLS + self.col
+
+    @classmethod
+    def from_i(cls, i: int) -> GridIndex:
+        return GridIndex(i // cls.MAX_GRID_COLS, i % cls.MAX_GRID_COLS)
+
+    @property
+    def ii(self) -> Tuple[int, int]:
+        return self.row, self.col
+
+    @classmethod
+    def from_ii(cls, ii: Tuple[int, int]) -> GridIndex:
+        return GridIndex(ii[0], ii[1])

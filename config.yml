@@ -4,4 +4,5 @@ redis:
 
 hash_algorithm: sha256
 
-max_grid_cols: 100
+max_grid_rows: 6
+max_grid_cols: 7
