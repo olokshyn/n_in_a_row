@@ -68,6 +68,14 @@ class Grid(Hashable):
             raise ValueError(f'Column {col} is out of range')
         return self.rows - self._chips_in_cols[col] - 1
 
+    def get_possible_moves(self) -> List[GridIndex]:
+        moves = []
+        for col in range(self.cols):
+            chips_in_col = self._chips_in_cols[col]
+            if chips_in_col < self.rows:
+                moves.append(GridIndex(self.rows - chips_in_col - 1, col))
+        return moves
+
     def drop_chip(self, col: int, chip: Chip) -> None:
         self._check_chip(chip)
         row = self.find_empty_row(col)

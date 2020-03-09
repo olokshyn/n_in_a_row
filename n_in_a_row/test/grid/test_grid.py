@@ -1,6 +1,7 @@
 import unittest
 
 from n_in_a_row.grid import grid
+from n_in_a_row.grid.grid_index import GridIndex
 from n_in_a_row.chip import Chip
 from n_in_a_row.win_state import WinState
 from n_in_a_row.config import max_grid_shape
@@ -262,6 +263,51 @@ class TestFindEmptyRow(unittest.TestCase):
         self.assertEqual(3, g.find_empty_row(4))
 
         self.assertEqual(4, g.find_empty_row(5))
+
+
+class TestGetPossibleMoves(unittest.TestCase):
+
+    def test_empty(self):
+        g = grid.Grid(rows=3, cols=3)
+        self.assertListEqual(
+            [GridIndex(2, 0), GridIndex(2, 1), GridIndex(2, 2)],
+            g.get_possible_moves()
+        )
+
+    def test_all_columns_available(self):
+        g = grid.Grid(rows=3, cols=3)
+        g.drop_chip(0, Chip.RED)
+        g.drop_chip(0, Chip.GREEN)
+        g.drop_chip(2, Chip.GREEN)
+        self.assertListEqual(
+            [GridIndex(0, 0), GridIndex(2, 1), GridIndex(1, 2)],
+            g.get_possible_moves()
+        )
+
+    def test_columns_full(self):
+        g = grid.Grid(rows=3, cols=3)
+        g.drop_chip(0, Chip.RED)
+        g.drop_chip(0, Chip.GREEN)
+        g.drop_chip(0, Chip.GREEN)
+        g.drop_chip(2, Chip.GREEN)
+        self.assertListEqual(
+            [GridIndex(2, 1), GridIndex(1, 2)],
+            g.get_possible_moves()
+        )
+        g.drop_chip(2, Chip.RED)
+        g.drop_chip(2, Chip.RED)
+        self.assertListEqual(
+            [GridIndex(2, 1)],
+            g.get_possible_moves()
+        )
+
+    def test_grid_full(self):
+        g = grid.Grid(rows=2, cols=2)
+        g.drop_chip(0, Chip.GREEN)
+        g.drop_chip(0, Chip.RED)
+        g.drop_chip(1, Chip.RED)
+        g.drop_chip(1, Chip.GREEN)
+        self.assertListEqual([], g.get_possible_moves())
 
 
 class TestDropChip(unittest.TestCase):

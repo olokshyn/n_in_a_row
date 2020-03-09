@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from copy import deepcopy
 from functools import cached_property
-from typing import Tuple, Optional, List, Dict, Set
+from typing import Optional, List, Dict, Set
 
 from n_in_a_row.chip import Chip
-from n_in_a_row.grid import Grid
+from n_in_a_row.grid import Grid, GridIndex
 from n_in_a_row.win_state import WinState
 from n_in_a_row.hashable import Hashable, pack_ints
 
@@ -62,7 +62,7 @@ class GameState(Hashable):
         self.next_chip.build_hash(hash_obj)
         hash_obj.update(pack_ints(self.chips_in_a_row))
 
-    def make_move(self, index: Tuple[int, int]) -> GameState:
+    def make_move(self, index: GridIndex) -> GameState:
         if self.win_state is not None:
             raise GameFinishedError()
 

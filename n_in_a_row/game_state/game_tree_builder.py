@@ -26,14 +26,8 @@ class GameTreeBuilder:
                 self.leaf_node_ids.append(game_state_id)
                 continue
 
-            possible_moves = []
-            for col in range(game_state.grid.cols):
-                row = game_state.grid.find_empty_row(col)
-                if row >= 0:
-                    possible_moves.append((row, col))
-
-            for move in possible_moves:
-                next_game_state = game_state.make_move(move)
+            for index in game_state.grid.get_possible_moves():
+                next_game_state = game_state.make_move(index)
                 try:
                     next_game_state = self.vault.load_game_state(next_game_state.game_state_id)
                     next_game_state.parents.append(game_state)
