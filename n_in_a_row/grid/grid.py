@@ -7,7 +7,7 @@ import numpy as np
 from n_in_a_row.chip import Chip
 from n_in_a_row.win_state import WinState
 from n_in_a_row.hashable import Hashable, pack_ints
-from n_in_a_row.config import load_config
+from n_in_a_row.config import max_grid_shape
 
 from .grid_index import GridIndex
 from .cell_union_manager import CellUnionManager
@@ -16,8 +16,9 @@ from .cell_union_manager import CellUnionManager
 class Grid(Hashable):
 
     def __init__(self, rows: int, cols: int):
-        config = load_config()
-        max_rows, max_cols = config['max_grid_rows'], config['max_grid_cols']
+        max_rows, max_cols = max_grid_shape()
+        if rows <= 0 or cols <= 0:
+            raise ValueError(f'Grid size ({rows}, {cols}), is invalid')
         if rows > max_rows or cols > max_cols:
             raise ValueError(
                 f'Grid size ({rows}, {cols}) is greater than the max size ({max_rows}, {max_cols})'
@@ -29,13 +30,13 @@ class Grid(Hashable):
         self.grid = np.full((self.rows, self.cols), Chip.EMPTY.value)
 
         # Derived data used for optimization
-        self.unions = {
+        self._unions = {
             'row': CellUnionManager(),
             'col': CellUnionManager(),
             'diag': CellUnionManager(),
             'subdiag': CellUnionManager()
         }
-        self.chips_in_cols: List[int] = [0] * self.cols
+        self._chips_in_cols: List[int] = [0] * self.cols
 
     def __repr__(self) -> str:
         return '{}(\n{},\nrows={},\ncols={}\n)'.format(
@@ -65,7 +66,7 @@ class Grid(Hashable):
     def find_empty_row(self, col: int) -> int:
         if col < 0 or col >= self.cols:
             raise ValueError(f'Column {col} is out of range')
-        return self.rows - self.chips_in_cols[col] - 1
+        return self.rows - self._chips_in_cols[col] - 1
 
     def drop_chip(self, col: int, chip: Chip) -> None:
         self._check_chip(chip)
@@ -75,10 +76,10 @@ class Grid(Hashable):
         self._set_chip(GridIndex(row, col), chip)
 
     def is_full(self) -> bool:
-        return all(x == self.rows for x in self.chips_in_cols)
+        return all(x == self.rows for x in self._chips_in_cols)
 
     def get_win_state(self, chips_in_a_row: int) -> Optional[WinState]:
-        for unions in self.unions.values():
+        for unions in self._unions.values():
             index, size = unions.get_max_union_root_and_size()
             if size >= chips_in_a_row:
                 return WinState.from_chip(Chip(self.grid[index.ii]))
@@ -105,7 +106,7 @@ class Grid(Hashable):
 
     def _set_chip(self, index: GridIndex, chip: Chip) -> None:
         self.grid[index.ii] = chip.value
-        self.chips_in_cols[index.col] += 1
+        self._chips_in_cols[index.col] += 1
 
         row, col = index
         up = row > 0
@@ -119,21 +120,21 @@ class Grid(Hashable):
                 unions.unite_cells(index, neighbor_index)
 
         if up:
-            unite(row - 1, col, self.unions['col'])
+            unite(row - 1, col, self._unions['col'])
             if left:
-                unite(row - 1, col - 1, self.unions['diag'])
+                unite(row - 1, col - 1, self._unions['diag'])
             if right:
-                unite(row - 1, col + 1, self.unions['subdiag'])
+                unite(row - 1, col + 1, self._unions['subdiag'])
         if left:
-            unite(row, col - 1, self.unions['row'])
+            unite(row, col - 1, self._unions['row'])
         if right:
-            unite(row, col + 1, self.unions['row'])
+            unite(row, col + 1, self._unions['row'])
         if down:
-            unite(row + 1, col, self.unions['col'])
+            unite(row + 1, col, self._unions['col'])
             if left:
-                unite(row + 1, col - 1, self.unions['subdiag'])
+                unite(row + 1, col - 1, self._unions['subdiag'])
             if right:
-                unite(row + 1, col + 1, self.unions['diag'])
+                unite(row + 1, col + 1, self._unions['diag'])
 
 
 class GridError(RuntimeError):

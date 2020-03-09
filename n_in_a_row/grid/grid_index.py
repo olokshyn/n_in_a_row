@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import Tuple
 
-from n_in_a_row.config import load_config
+from n_in_a_row.config import max_grid_shape
 
 
 class GridIndexMeta(type):
 
     def __new__(cls, *args, **kwargs):
         clsobj = super().__new__(cls, *args, **kwargs)
-        config = load_config()
-        clsobj.MAX_GRID_ROWS = config['max_grid_rows']
-        clsobj.MAX_GRID_COLS = config['max_grid_cols']
+        max_rows, max_cols = max_grid_shape()
+        clsobj.MAX_GRID_ROWS = max_rows
+        clsobj.MAX_GRID_COLS = max_cols
         return clsobj
 
 
@@ -23,6 +23,8 @@ class GridIndex(metaclass=GridIndexMeta):
     __slots__ = ('row', 'col')
 
     def __init__(self, row: int, col: int):
+        assert 0 <= row < self.MAX_GRID_ROWS
+        assert 0 <= col < self.MAX_GRID_COLS
         self.row = row
         self.col = col
 
@@ -43,7 +45,10 @@ class GridIndex(metaclass=GridIndexMeta):
         return NotImplemented
 
     def __ne__(self, other: GridIndex) -> bool:
-        return not self.__eq__(other)
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return NotImplemented
+        return not result
 
     def __hash__(self) -> int:
         return self.row * self.MAX_GRID_COLS + self.col

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Tuple, Dict, Set, cast
+from typing import Tuple, cast
 
 import numpy as np
 
-from n_in_a_row.config import load_config
+from n_in_a_row.config import max_grid_shape
 
 from .grid_index import GridIndex
 
@@ -12,14 +12,17 @@ from .grid_index import GridIndex
 class CellUnionManager:
 
     def __init__(self):
-        config = load_config()
-        array_size = config['max_grid_rows'] * config['max_grid_cols']
+        max_rows, max_cols = max_grid_shape()
+        array_size = max_rows * max_cols
         self.parent = np.arange(array_size)
-        self.tree_size = np.zeros(array_size)
+        # tree size is valid only for roots
+        self.tree_size = np.ones(array_size)
 
     def _get_root(self, index_i: int) -> int:
         while index_i != self.parent[index_i]:
-            self.tree_size[self.parent[index_i]] -= self.tree_size[index_i]
+            # we don't need to update size for non-root nodes
+            # if self.parent[index_i] != self.parent[self.parent[index_i]]:
+            #     self.tree_size[self.parent[index_i]] -= self.tree_size[index_i]
             self.parent[index_i] = self.parent[self.parent[index_i]]
             index_i = self.parent[index_i]
         return index_i
