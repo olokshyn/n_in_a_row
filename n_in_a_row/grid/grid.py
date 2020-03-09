@@ -59,6 +59,18 @@ class Grid(Hashable):
         index = self._check_index(index)
         return Chip(self.grid[index.ii])
 
+    def __eq__(self, other):
+        if not isinstance(other, Grid):
+            return NotImplemented
+        return (
+                self.rows == other.rows
+                and self.cols == other.cols
+                and np.all(self.grid == other.grid)
+        )
+
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     def build_hash(self, hash_obj) -> None:
         hash_obj.update(pack_ints(self.rows, self.cols))
         hash_obj.update(self.grid.tobytes())

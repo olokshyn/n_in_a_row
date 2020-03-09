@@ -53,6 +53,19 @@ class GameState(Hashable):
                 self.game_state_id
             )
 
+    def __eq__(self, other):
+        if not isinstance(other, GameState):
+            return NotImplemented
+        return (
+            self.grid == other.grid
+            and self.next_chip == other.next_chip
+            and self.chips_in_a_row == other.chips_in_a_row
+            and self.win_state == other.win_state
+        )
+
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     @cached_property
     def game_state_id(self) -> int:
         return hash(self)

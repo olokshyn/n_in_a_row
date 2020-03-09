@@ -55,7 +55,21 @@ class TestInit(unittest.TestCase):
         self.assertEqual(Chip.GREEN, gs.grid[0, 3])
 
 
-class TestGameStateId(unittest.TestCase):
+class TestEqualityAndGameStateId(unittest.TestCase):
+
+    @staticmethod
+    def _make_diff_grids():
+        g1 = Grid(rows=3, cols=3)
+        g1.drop_chip(0, Chip.GREEN)
+        g1.drop_chip(1, Chip.RED)
+        g1.drop_chip(2, Chip.GREEN)
+
+        g2 = Grid(rows=3, cols=3)
+        g2.drop_chip(0, Chip.RED)
+        g2.drop_chip(1, Chip.GREEN)
+        g2.drop_chip(2, Chip.RED)
+
+        return g1, g2
 
     @staticmethod
     def _create_same_grids():
@@ -73,32 +87,29 @@ class TestGameStateId(unittest.TestCase):
         g1, g2 = self._create_same_grids()
         gs1 = GameState(g1, next_chip=Chip.GREEN, chips_in_a_row=4)
         gs2 = GameState(g2, next_chip=Chip.GREEN, chips_in_a_row=4)
+        self.assertEqual(gs1, gs2)
         self.assertEqual(gs1.game_state_id, gs2.game_state_id)
 
     def test_diff_grid(self):
-        g1 = Grid(rows=3, cols=3)
-        g1.drop_chip(0, Chip.GREEN)
-        g1.drop_chip(1, Chip.RED)
-        g1.drop_chip(2, Chip.GREEN)
-        g2 = Grid(rows=3, cols=3)
-        g2.drop_chip(2, Chip.RED)
-        g2.drop_chip(1, Chip.GREEN)
-        g2.drop_chip(0, Chip.RED)
+        g1, g2 = self._make_diff_grids()
 
         gs1 = GameState(g1, next_chip=Chip.GREEN, chips_in_a_row=4)
         gs2 = GameState(g2, next_chip=Chip.GREEN, chips_in_a_row=4)
+        self.assertNotEqual(gs1, gs2)
         self.assertNotEqual(gs1.game_state_id, gs2.game_state_id)
 
     def test_same_grid_diff_next_chip(self):
         g1, g2 = self._create_same_grids()
         gs1 = GameState(g1, next_chip=Chip.GREEN, chips_in_a_row=4)
         gs2 = GameState(g2, next_chip=Chip.RED, chips_in_a_row=4)
+        self.assertNotEqual(gs1, gs2)
         self.assertNotEqual(gs1.game_state_id, gs2.game_state_id)
 
     def test_same_grid_diff_chips_in_a_row(self):
         g1, g2 = self._create_same_grids()
         gs1 = GameState(g1, next_chip=Chip.RED, chips_in_a_row=3)
         gs2 = GameState(g2, next_chip=Chip.RED, chips_in_a_row=4)
+        self.assertNotEqual(gs1, gs2)
         self.assertNotEqual(gs1.game_state_id, gs2.game_state_id)
 
 
@@ -117,7 +128,7 @@ class TestMakeMove(unittest.TestCase):
         gs = GameState(g, next_chip=Chip.GREEN, chips_in_a_row=4)
         child = gs.make_move(index)
 
-        self.assertTrue(np.all(next_g.grid == child.grid.grid))
+        self.assertEqual(next_g, child.grid)
         self.assertEqual(Chip.EMPTY, gs.grid[index])
         self.assertEqual(Chip.RED, child.next_chip)
         self.assertEqual(4, child.chips_in_a_row)

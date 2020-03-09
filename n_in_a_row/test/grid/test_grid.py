@@ -124,11 +124,12 @@ class TestSetterGetter(unittest.TestCase):
         self.assertRaises(grid.CellOccupiedError, do_assign, 2, 2, Chip.GREEN)
 
 
-class TestHash(unittest.TestCase):
+class TestEqualityAndHash(unittest.TestCase):
 
     def test_empty_grids(self):
         g1 = grid.Grid(rows=3, cols=2)
         g2 = grid.Grid(rows=3, cols=2)
+        self.assertEqual(g1, g2)
         self.assertEqual(hash(g1), hash(g2))
 
     def test_same_grids(self):
@@ -150,6 +151,7 @@ class TestHash(unittest.TestCase):
         g2.drop_chip(2, Chip.RED)
         g2.drop_chip(2, Chip.GREEN)
 
+        self.assertEqual(g1, g2)
         self.assertEqual(hash(g1), hash(g2))
 
     def test_same_grids_diff_created(self):
@@ -164,6 +166,24 @@ class TestHash(unittest.TestCase):
         g2.drop_chip(0, Chip.GREEN)
 
         self.assertEqual(hash(g1), hash(g2))
+        self.assertEqual(g1, g2)
+
+        g1 = grid.Grid(rows=3, cols=4)
+        g1.drop_chip(0, Chip.GREEN)
+        g1.drop_chip(1, Chip.RED)
+        g1.drop_chip(2, Chip.GREEN)
+        g1.drop_chip(0, Chip.RED)
+        g1.drop_chip(2, Chip.RED)
+
+        g2 = grid.Grid(rows=3, cols=4)
+        g2.drop_chip(2, Chip.GREEN)
+        g2.drop_chip(1, Chip.RED)
+        g2.drop_chip(0, Chip.GREEN)
+        g2.drop_chip(2, Chip.RED)
+        g2.drop_chip(0, Chip.RED)
+
+        self.assertEqual(g1, g2)
+        self.assertEqual(hash(g1), hash(g2))
 
     def test_diff_grids(self):
         g1 = grid.Grid(rows=2, cols=3)
@@ -176,6 +196,7 @@ class TestHash(unittest.TestCase):
         g2.drop_chip(1, Chip.GREEN)
         g2.drop_chip(2, Chip.GREEN)
 
+        self.assertNotEqual(g1, g2)
         self.assertNotEqual(hash(g1), hash(g2))
 
         g1 = grid.Grid(rows=2, cols=3)
@@ -186,6 +207,7 @@ class TestHash(unittest.TestCase):
         g2.drop_chip(1, Chip.RED)
         g2.drop_chip(2, Chip.GREEN)
 
+        self.assertNotEqual(g1, g2)
         self.assertNotEqual(hash(g1), hash(g2))
 
     def test_same_content_diff_size(self):
@@ -199,6 +221,7 @@ class TestHash(unittest.TestCase):
         g2.drop_chip(1, Chip.RED)
         g2.drop_chip(2, Chip.GREEN)
 
+        self.assertNotEqual(g1, g2)
         self.assertNotEqual(hash(g1), hash(g2))
 
         g1 = grid.Grid(rows=2, cols=3)
@@ -211,6 +234,54 @@ class TestHash(unittest.TestCase):
         g2.drop_chip(1, Chip.RED)
         g2.drop_chip(2, Chip.GREEN)
 
+        self.assertNotEqual(g1, g2)
+        self.assertNotEqual(hash(g1), hash(g2))
+
+        g1 = grid.Grid(rows=3, cols=4)
+        g1.drop_chip(0, Chip.GREEN)
+        g1.drop_chip(1, Chip.RED)
+        g1.drop_chip(2, Chip.GREEN)
+        g1.drop_chip(0, Chip.RED)
+        g1.drop_chip(2, Chip.RED)
+
+        g2 = grid.Grid(rows=3, cols=3)
+        g2.drop_chip(0, Chip.GREEN)
+        g2.drop_chip(1, Chip.RED)
+        g2.drop_chip(2, Chip.GREEN)
+        g2.drop_chip(0, Chip.RED)
+        g2.drop_chip(2, Chip.RED)
+
+        self.assertNotEqual(g1, g2)
+        self.assertNotEqual(hash(g1), hash(g2))
+
+        g3 = grid.Grid(rows=4, cols=4)
+        g3.drop_chip(0, Chip.GREEN)
+        g3.drop_chip(1, Chip.RED)
+        g3.drop_chip(2, Chip.GREEN)
+        g3.drop_chip(0, Chip.RED)
+        g3.drop_chip(2, Chip.RED)
+
+        self.assertNotEqual(g1, g3)
+        self.assertNotEqual(g2, g3)
+        self.assertNotEqual(hash(g1), hash(g3))
+        self.assertNotEqual(hash(g2), hash(g3))
+
+    def test_diff_content_same_size(self):
+        g1 = grid.Grid(rows=3, cols=4)
+        g1.drop_chip(0, Chip.GREEN)
+        g1.drop_chip(1, Chip.RED)
+        g1.drop_chip(2, Chip.GREEN)
+        g1.drop_chip(0, Chip.RED)
+        g1.drop_chip(2, Chip.RED)
+
+        g2 = grid.Grid(rows=3, cols=4)
+        g2.drop_chip(0, Chip.GREEN)
+        g2.drop_chip(1, Chip.RED)
+        g2.drop_chip(2, Chip.GREEN)
+        g2.drop_chip(0, Chip.RED)
+        g2.drop_chip(2, Chip.GREEN)
+
+        self.assertNotEqual(g1, g2)
         self.assertNotEqual(hash(g1), hash(g2))
 
 

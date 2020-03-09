@@ -44,12 +44,6 @@ class GridIndex(metaclass=GridIndexMeta):
             return len(other) == 2 and self.row == other[0] and self.col == other[1]
         return NotImplemented
 
-    def __ne__(self, other: GridIndex) -> bool:
-        result = self.__eq__(other)
-        if result is NotImplemented:
-            return NotImplemented
-        return not result
-
     def __hash__(self) -> int:
         return self.row * self.MAX_GRID_COLS + self.col
 
