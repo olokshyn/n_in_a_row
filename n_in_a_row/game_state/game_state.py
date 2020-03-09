@@ -40,7 +40,7 @@ class GameState(Hashable):
     def __repr__(self) -> str:
         return '{}(\n{},\nnext_chip={},\nchips_in_a_row={},\n' \
                'win_state={},\nwin_states_counter={},' \
-               '\nparents={}\nchildren={}\n), game_state_id={}' \
+               '\nparents={}\nchildren={}\n), game_state_id={}\n' \
             .format(
                 self.__class__.__name__,
                 repr(self.grid),
